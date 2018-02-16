@@ -74,7 +74,7 @@ public class yWaveManagement : MonoBehaviour {
                             if(enemyID[i] == enemyType[k].name)
                             {
                                 SpriteRenderer enemy;
-                                enemy = Instantiate(enemyType[0], enemyPos[i], Quaternion.identity) as SpriteRenderer;
+                                enemy = Instantiate(enemyType[k], enemyPos[i], Quaternion.identity) as SpriteRenderer;
                                 enemy.name = enemyID[i] + number;
                                 enemyManager = enemy.GetComponent<yEnemyManager>();
                                 enemyManager.EnemyHP = enemyHP[i];
