@@ -10,6 +10,7 @@ public class yBandFade : MonoBehaviour {
 
     [SerializeField,Header("FadeInとFadeOutのフレームカウント")]
     int frameCount = 5;
+    int maxWave = 0;
 
     [SerializeField,Header("FadeInしたあとのFadeOutする時間")]
     float fadeOutTime = 0.5f;
@@ -41,7 +42,9 @@ public class yBandFade : MonoBehaviour {
 
         band.color = new Color(band.color.r, band.color.g, band.color.b, 0);
         bandText.color = new Color(bandText.color.r, bandText.color.g, bandText.color.b, 0);
-        startText = "START Wave " + "1 / 5";
+
+        maxWave = waveManagement.WaveMax;
+        startText = "START Wave " + "1 / " + maxWave;
         bandText.text = startText;
     }
 
@@ -74,7 +77,7 @@ public class yBandFade : MonoBehaviour {
         {
             if (bandText.text != startText)//初回以外テキスト更新
             {
-                bandText.text = "Wave " + waveManagement.WaveNumber + " / 3";
+                bandText.text = "Wave " + waveManagement.WaveNumber + " / " + maxWave;
                 flgFade = true;
             }
         }
@@ -88,7 +91,7 @@ public class yBandFade : MonoBehaviour {
         if (alpha <= 0.0f)
         {
             flgFadeOut = false;
-            bandText.text = "Wave " + waveManagement.WaveNumber + " / 3";
+            bandText.text = "Wave " + waveManagement.WaveNumber + " / " + maxWave;
             time.FlgTime = true;//そして動き出す
         }
     }

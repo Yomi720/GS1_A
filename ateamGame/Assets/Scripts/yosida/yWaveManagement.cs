@@ -8,25 +8,25 @@ public class yWaveManagement : MonoBehaviour {
 
     [SerializeField,Header("csvのIDにSprite.name入れなきゃ動かないよ")]
     SpriteRenderer[] enemyType;
-    [SerializeField]
-    SpriteRenderer bossType;
 
     Vector3[] enemyPos;
 
     int i = 0, j = 0;
     int stageNumber = 1;
     int waveNumber = 1;
+    int maxWave = 0;
 
     [System.NonSerialized]
-    public int[] enemyNumber = new int[3];//Wave毎ごとの敵の数、死んだら減っていく
+    public int[] enemyNumber;//Wave毎ごとの敵の数、死んだら減っていく
     int[] enemyHP;
-    float[] enemyAppearanceTime;//敵が出てくる時間
     int number;//そのWave毎ごとに出現する敵の数、出現したら減っていく
+    int wholeNumber;//全ての敵の数
+
+    float[] enemyAppearanceTime;//敵が出てくる時間
     float time = 0;
-    int wholeNumber;
 
     bool flgNumber = true;
-    bool flgBoss = false;
+    bool flgBoss = false;//trueでボスが出現
 
 
     string[] enemyID;
@@ -40,20 +40,26 @@ public class yWaveManagement : MonoBehaviour {
         set { waveNumber = value; }
         get { return waveNumber; }
     }
+    public int WaveMax
+    {
+        set { maxWave = value; }
+        get { return maxWave; }
+    }
     // Use this for initialization
     void Start() {
         csv = GameObject.Find("Reference").GetComponent<yCsvRender>();
         bandFade = GameObject.Find("Canvas/Band").GetComponent<yBandFade>();
         _time = GameObject.Find("Time").GetComponent<yTime>();
 
-        EnemyNumber((int)topRow.Wave);
-
-        EnemyTime((int)topRow.Time);
-        EnemyPos((int)topRow.Pos);
-        EnemyID((int)topRow.ID);
-        EnemyHP((int)topRow.HP);
+        MaxWave((int)topRow.Wave);//最大Wave取得
+        EnemyNumber((int)topRow.Wave);//WaveごとのEnemyの数
+        EnemyTime((int)topRow.Time);//Enemyが出てくる時間
+        EnemyPos((int)topRow.Pos);//Enemyが出てくる場所
+        EnemyID((int)topRow.ID);//どのEnemyか
+        EnemyHP((int)topRow.HP);//EnemyのHP
         number = enemyNumber[0];
-        wholeNumber = enemyNumber[0] + enemyNumber[1] + enemyNumber[2];
+        for (int i = 0; i < maxWave; i++)
+            wholeNumber += enemyNumber[i];
         print(wholeNumber);
         StartCoroutine("BossAppearance");
 
@@ -64,11 +70,11 @@ public class yWaveManagement : MonoBehaviour {
     {
         if(_time.FlgTime)
             time += Time.deltaTime;
-        print(enemyNumber[j]);
 
-        if (waveNumber < 3)//ボス戦前のWave数まで
+
+        if (waveNumber < maxWave)//ボス戦前のWave数まで
         {
-            if (flgNumber && j < 2)
+            if (flgNumber && j < maxWave - 1)
             {
                 if (time >= enemyAppearanceTime[i])//時間になったら生成
                 {
@@ -102,11 +108,11 @@ public class yWaveManagement : MonoBehaviour {
             if (number <= 0)//そのWaveに出てくる敵の出現がなくなったら
                 flgNumber = false;
 
-            if (enemyNumber[j] <= 0 && j < 2)//そのWaveの敵が全て死んだら
+            if (enemyNumber[j] <= 0 && j < maxWave - 1)//そのWaveの敵が全て死んだら
             {
                 waveNumber++;
                 time = 0;
-                if (j < 1)
+                if (j < maxWave - 2)
                 {
                     j++;
                     bandFade.FlgFadeIn = true;
@@ -134,22 +140,13 @@ public class yWaveManagement : MonoBehaviour {
 
     private void EnemyNumber(int x)//Wave毎ごとの敵の数
     {
-        for(int y = 1;y < csv.wave.Count; y++)
+        enemyNumber = new int[maxWave];
+
+        for (int y = 1;y < csv.wave.Count; y++)
         {
             if (int.Parse(csv.wave[y][(int)topRow.Stage]) == stageNumber)//ステージの確認
             {
-                switch (int.Parse(csv.wave[y][x]))
-                {
-                    case 1:
-                        enemyNumber[0] += 1;
-                        break;
-                    case 2:
-                        enemyNumber[1] += 1;
-                        break;
-                    case 3:
-                        enemyNumber[2] += 1;
-                        break;
-                }
+                enemyNumber[int.Parse(csv.wave[y][x]) - 1] += 1;
             }
         }
     }
@@ -157,7 +154,8 @@ public class yWaveManagement : MonoBehaviour {
     private void EnemyTime(int x)//Wave毎ごとの敵の出てくる時間
     {
         int i = 0;
-        int number = enemyNumber[0] + enemyNumber[1] + enemyNumber[2];
+        for (int k = 0; k < maxWave; k++)
+            number += enemyNumber[k];
         enemyAppearanceTime = new float[number];
 
         for (int y = 1; y < csv.wave.Count; y++)
@@ -173,7 +171,8 @@ public class yWaveManagement : MonoBehaviour {
     private void EnemyPos(int x)//敵の位置の初期化
     {
         int i = 0;
-        int number = enemyNumber[0] + enemyNumber[1] + enemyNumber[2];
+        for (int k = 0; k < maxWave; k++)
+            number += enemyNumber[k];
         enemyPos = new Vector3[number];
 
         for (int y = 1; y < csv.wave.Count; y++)
@@ -206,7 +205,8 @@ public class yWaveManagement : MonoBehaviour {
     private void EnemyID(int x)//敵のIDの初期化
     {
         int i = 0;
-        int number = enemyNumber[0] + enemyNumber[1] + enemyNumber[2];
+        for (int k = 0; k < maxWave; k++)
+            number += enemyNumber[k];
 
         enemyID = new string[number];
 
@@ -223,7 +223,8 @@ public class yWaveManagement : MonoBehaviour {
     private void EnemyHP(int x)//敵のHP
     {
         int i = 0;
-        int number = enemyNumber[0] + enemyNumber[1] + enemyNumber[2];
+        for (int k = 0; k < maxWave; k++)
+            number += enemyNumber[k];
         enemyHP = new int[number];
 
         for (int y = 1; y < csv.wave.Count; y++)
@@ -237,21 +238,43 @@ public class yWaveManagement : MonoBehaviour {
 
     }
 
+    private void MaxWave(int x)
+    {
+        for (int y = 1; y < csv.wave.Count; y++)
+        {
+            if (int.Parse(csv.wave[y][(int)topRow.Stage]) == stageNumber)//ステージの確認
+            {
+                if(maxWave < int.Parse(csv.wave[y][x]))
+                {
+                    maxWave = int.Parse(csv.wave[y][x]);
+                }
+            }
+        }
+    }
+
     IEnumerator BossAppearance()
     {
         yield return new WaitUntil(() => flgBoss);
         yield return new WaitForSeconds(1.0f);
 
-        yield return StartCoroutine("BossPerformance");
+        yield return StartCoroutine("BossPerformance");//ボスが出てくる演出
 
+        yield return new WaitForSeconds(enemyAppearanceTime[i]);//ボス出現
         SpriteRenderer boss;
-        boss = Instantiate(this.bossType, enemyPos[i], Quaternion.identity) as SpriteRenderer;
-        boss.name = enemyID[i] + number;
+        for (int k = 0; k < enemyType.Length; k++)
+        {
+            if (enemyID[i] == enemyType[k].name)
+            {
+                boss = Instantiate(enemyType[k], enemyPos[i], Quaternion.identity) as SpriteRenderer;
+                boss.name = enemyID[i] + number;
+                enemyManager = boss.GetComponent<yEnemyManager>();
+                enemyManager.EnemyHP = enemyHP[i];
 
-        yield return StartCoroutine("BossPerformanceText");
-        yield return new WaitForSeconds(1.0f);
+                break;
+            }
+        }
 
-
+        yield return StartCoroutine("BossPerformanceText");//ボス出現のテキスト
         yield break;
     }
 
@@ -277,6 +300,7 @@ public class yWaveManagement : MonoBehaviour {
         }
         yield break;
     }
+
     IEnumerator BossPerformanceText()
     {
         Text[] text = new Text[6];

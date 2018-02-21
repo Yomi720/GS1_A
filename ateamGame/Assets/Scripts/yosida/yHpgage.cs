@@ -7,6 +7,7 @@ using System;
 public class yHpgage : MonoBehaviour {
 
     GameObject parent;
+    GameObject particle;
     Image hpGage, redGage;
 
     [SerializeField,Header("PlayerHP専用")]
@@ -28,6 +29,7 @@ public class yHpgage : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+        particle = Resources.Load("yResources/particle") as GameObject;
         //子オブジェクト取得
         hpGage = transform.FindChild("hpGage").gameObject.GetComponent<Image>();
         redGage = transform.FindChild("redGage").gameObject.GetComponent<Image>();
@@ -90,6 +92,8 @@ public class yHpgage : MonoBehaviour {
             {
                 if(parent.tag == "enemy")
                     parent.tag = "deathEnemy";
+                GameObject _particle = Instantiate(particle,parent.transform.position,Quaternion.identity) as GameObject;
+                Destroy(_particle, 1.0f);
                 yield return StartCoroutine("ComboEnd");
                 break;
             }
